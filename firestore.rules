@@ -1,14 +1,11 @@
 // ==========================================================
-// Linkchain (Solana) Firestore security rules
+// Combined Firestore security rules — shared Firebase project
 // Paste this into Firebase Console > Firestore Database > Rules
+// (covers BOTH the EVM Linkchain wallet and this Solana Linkchain wallet)
 // ==========================================================
 // Before this works: in Firebase Console > Authentication > Sign-in method,
-// enable "Email/Password" (the app signs users in with a wallet-derived
+// enable "Email/Password" (both apps sign users in with a wallet-derived
 // password against a synthetic address, so there's no real inbox involved).
-//
-// This uses the "solUsers" collection so it never collides with data from
-// other apps (e.g. Linkchain's "users" collection) if you reuse the same
-// Firebase project.
 // ==========================================================
 
 rules_version = '2';
@@ -16,20 +13,36 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Each user's data lives under /solUsers/{uid} and its subcollections:
-    //   /solUsers/{uid}                     -> profile doc { walletAddress }
-    //   /solUsers/{uid}/contacts/{id}        -> saved addresses
-    //   /solUsers/{uid}/transactions/{hash}  -> send history
-    //   /solUsers/{uid}/balances/{doc}       -> latest balance snapshot
-    //
-    // A user can only read or write documents under their own uid.
-
-    match /solUsers/{userId} {
+    // EVM wallet data:
+    //   /users/{uid}                     -> profile doc { walletAddress }
+    //   /users/{uid}/contacts/{id}
+    //   /users/{uid}/transactions/{hash}
+    //   /users/{uid}/balances/{chainId}
+    match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
 
       match /{document=**} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
     }
+
+    // Solana wallet data:
+    //   /solUsers/{uid}                     -> profile doc { walletAddress }
+    //   /solUsers/{uid}/contacts/{id}
+    //   /solUsers/{uid}/transactions/{hash}
+    //   /solUsers/{uid}/balances/{doc}
+    //
+    // ADMIN ACCESS: only this UID can read every user's data below —
+    // everyone else can only read/write their own.
+    match /solUsers/{userId} {
+      allow read, write: if request.auth != null &&
+        (request.auth.uid == userId || request.auth.uid == "VgMH8gybcePdkuzNqbP4vAAIesz2");
+
+      match /{document=**} {
+        allow read, write: if request.auth != null &&
+          (request.auth.uid == userId || request.auth.uid == "VgMH8gybcePdkuzNqbP4vAAIesz2");
+      }
+    }
   }
 }
+
