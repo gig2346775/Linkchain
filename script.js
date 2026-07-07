@@ -91,13 +91,31 @@ function openPanel(panel) {
 
 // ---------- Connection (Phantom) ----------
 
+function isMobileDevice() {
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
 async function connectWallet() {
   const provider = window.solana;
+
   if (!provider || !provider.isPhantom) {
+    // On mobile, Phantom doesn't inject window.solana into Safari/Chrome —
+    // it only exists inside Phantom's own in-app browser. So instead of
+    // just opening the app store, send the user into Phantom's in-app
+    // browser pointed at this same page. Once it reloads there,
+    // window.solana will exist and Connect will work normally.
+    if (isMobileDevice()) {
+      const currentUrl = encodeURIComponent(window.location.href);
+      showToast('Opening in Phantom…');
+      window.location.href = `https://phantom.app/ul/browse/${currentUrl}?ref=${currentUrl}`;
+      return;
+    }
+
     showToast('Phantom not found — install it to continue');
     window.open('https://phantom.app/download', '_blank');
     return;
   }
+
   try {
     const resp = await provider.connect();
     walletPublicKey = resp.publicKey;
@@ -126,7 +144,8 @@ async function onConnected() {
       await Promise.all([loadContacts(), loadPortfolio()]);
     } catch (err) {
       console.error('Backend sign-in failed:', err);
-      showToast('Wallet connected — backend features unavailable');
+      const reason = err.code || err.message || 'unknown error';
+      showToast(`Wallet connected — backend error: ${reason}`, 6000);
     }
   }
 }
@@ -423,11 +442,11 @@ function escapeHtml(str) {
 }
 
 let toastTimer = null;
-function showToast(message) {
+function showToast(message, duration = 2800) {
   toast.textContent = message;
   toast.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), duration);
 }
 
 // ---------- 3D orb parallax ----------
