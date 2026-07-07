@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Linkchain — Your Solana wallet, in orbit.</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
+<link rel="stylesheet" href="styles.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<canvas id="starField"></canvas>
+<div class="mesh-glow mesh-a"></div>
+<div class="mesh-glow mesh-b"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <svg class="logo" width="32" height="32" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="orbitGrad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#B6A5FF"/>
+          <stop offset="1" stop-color="#F45FB0"/>
+        </linearGradient>
+      </defs>
+      <ellipse cx="24" cy="24" rx="20" ry="9" transform="rotate(-25 24 24)" stroke="url(#orbitGrad)" stroke-width="2"/>
+      <ellipse cx="24" cy="24" rx="20" ry="9" transform="rotate(25 24 24)" stroke="#5EE7D9" stroke-width="2" opacity="0.7"/>
+      <circle cx="24" cy="24" r="6" fill="url(#orbitGrad)"/>
+    </svg>
+    <span class="brand-name">Linkchain</span>
+  </div>
+  <button id="connectBtn" class="btn-connect">Connect Phantom</button>
+</header>
+
+<main class="app">
+
+  <section class="orb-hero" id="orbHero">
+    <div class="orb-layer orb-back"></div>
+    <div class="orb-layer orb-mid"></div>
+    <div class="orb-core" id="orbCore">
+      <div class="orb-sheen"></div>
+    </div>
+  </section>
+
+  <section class="wallet-card" id="walletCard">
+    <div class="card-top">
+      <div class="cluster-badge">
+        <span class="pulse-dot"></span>
+        Solana mainnet-beta
+      </div>
+      <div class="account-pill" id="accountPill" hidden>
+        <span class="dot"></span>
+        <span id="accountAddress">—</span>
+      </div>
+    </div>
+
+    <div class="balance-block">
+      <span class="balance-label">Balance</span>
+      <div class="balance-amount">
+        <span id="balanceValue">—</span>
+        <span class="balance-symbol">SOL</span>
+      </div>
+      <span class="balance-fiat" id="balanceFiat">Connect Phantom to view your balance</span>
+    </div>
+
+    <div class="card-actions">
+      <button class="action-btn primary" id="sendOpenBtn" disabled>Send</button>
+      <button class="action-btn" id="receiveOpenBtn" disabled>Receive</button>
+      <button class="action-btn" id="contactsOpenBtn" disabled>Contacts</button>
+      <button class="action-btn" id="refreshBtn" disabled>Refresh</button>
+    </div>
+  </section>
+
+  <section class="panel" id="sendPanel" hidden>
+    <div class="panel-head">
+      <h2>Send SOL</h2>
+      <button class="close-btn" data-close="sendPanel">✕</button>
+    </div>
+    <form id="sendForm">
+      <label class="field">
+        <span>Recipient address</span>
+        <input type="text" id="recipientInput" placeholder="Solana address" required />
+      </label>
+      <label class="field">
+        <span>Amount</span>
+        <div class="amount-row">
+          <input type="number" id="amountInput" placeholder="0.0" step="any" min="0" required />
+          <span class="amount-symbol">SOL</span>
+        </div>
+      </label>
+      <button type="submit" class="action-btn primary full" id="sendSubmitBtn">Review &amp; send</button>
+      <p class="field-note" id="sendStatus"></p>
+    </form>
+  </section>
+
+  <section class="panel" id="receivePanel" hidden>
+    <div class="panel-head">
+      <h2>Receive SOL</h2>
+      <button class="close-btn" data-close="receivePanel">✕</button>
+    </div>
+    <p class="field-note">Share this address to receive SOL or SPL tokens.</p>
+    <div class="address-box">
+      <span id="receiveAddress">—</span>
+      <button id="copyAddressBtn">Copy</button>
+    </div>
+  </section>
+
+  <section class="panel" id="contactsPanel" hidden>
+    <div class="panel-head">
+      <h2>Contacts</h2>
+      <button class="close-btn" data-close="contactsPanel">✕</button>
+    </div>
+    <ul id="contactsList" class="history-list">
+      <li class="history-empty">No saved contacts yet.</li>
+    </ul>
+    <form id="contactForm" class="contact-form">
+      <label class="field">
+        <span>Label</span>
+        <input type="text" id="contactLabel" placeholder="e.g. Ada — treasury" required />
+      </label>
+      <label class="field">
+        <span>Address</span>
+        <input type="text" id="contactAddress" placeholder="Solana address" required />
+      </label>
+      <button type="submit" class="action-btn primary full">Save contact</button>
+    </form>
+  </section>
+
+  <section class="portfolio" id="portfolioSection" hidden>
+    <div class="history-head">
+      <h2>Portfolio</h2>
+      <span class="history-sub" id="portfolioSub">Synced across devices</span>
+    </div>
+    <div class="portfolio-grid" id="portfolioGrid"></div>
+  </section>
+
+  <section class="history">
+    <div class="history-head">
+      <h2>Activity</h2>
+      <span class="history-sub">This session only</span>
+    </div>
+    <ul id="historyList" class="history-list">
+      <li class="history-empty">No transactions yet. Once you send SOL, they'll show up here.</li>
+    </ul>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.95.3/lib/index.iife.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="config.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
